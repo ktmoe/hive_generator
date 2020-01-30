@@ -23,36 +23,40 @@ class ClassBuilder extends Builder {
   @override
   String buildRead() {
     var code = StringBuffer();
+
+    // TODO change (b) => b to empty
     code.writeln('''
     var numOfFields = reader.readByte();
     var fields = <int, dynamic>{
       for (var i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ${cls.name}(
+    return ${cls.name}((b) => b
     ''');
 
     var constr = cls.constructors.firstOrNullWhere((it) => it.name.isEmpty);
     check(constr != null, 'Provide an unnamed constructor.');
 
     // The remaining fields to initialize.
-    var fields = setters.toList();
+    // TODO change getters to setters
+    var fields = getters.toList();
 
-    var initializingParams =
-        constr.parameters.where((param) => param.isInitializingFormal);
-    for (var param in initializingParams) {
-      var field = fields.firstOrNullWhere((it) => it.name == param.name);
-      // Final fields
-      field ??= getters.firstOrNullWhere((it) => it.name == param.name);
-      if (field != null) {
-        if (param.isNamed) {
-          code.write('${param.name}: ');
-        }
-        code.writeln('${_cast(param.type, 'fields[${field.index}]')},');
-        fields.remove(field);
-      }
-    }
+    // TODO uncomment below codes to make this on par with original generator
+    // var initializingParams =
+    //     constr.parameters.where((param) => param.isInitializingFormal);
+    // for (var param in initializingParams) {
+    //   var field = fields.firstOrNullWhere((it) => it.name == param.name);
+    //   // Final fields
+    //   field ??= getters.firstOrNullWhere((it) => it.name == param.name);
+    //   if (field != null) {
+    //     if (param.isNamed) {
+    //       code.write('${param.name}: ');
+    //     }
+    //     code.writeln('${_cast(param.type, 'fields[${field.index}]')},');
+    //     fields.remove(field);
+    //   }
+    // }
 
-    code.writeln(')');
+    // code.writeln(')');
 
     // There may still be fields to initialize that were not in the constructor
     // as initializing formals. We do so using cascades.
@@ -61,7 +65,8 @@ class ClassBuilder extends Builder {
           '..${field.name} = ${_cast(field.type, 'fields[${field.index}]')}');
     }
 
-    code.writeln(';');
+    // TODO remove all string except ";"
+    code.writeln(');');
 
     return code.toString();
   }
