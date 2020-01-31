@@ -26,8 +26,8 @@ class ClassBuilder extends Builder {
 
     // TODO change (b) => b to empty
     code.writeln('''
-    var numOfFields = reader.readByte();
-    var fields = <int, dynamic>{
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
       for (var i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return ${cls.name}((b) => b
