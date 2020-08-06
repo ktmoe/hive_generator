@@ -117,10 +117,16 @@ class ClassBuilder extends Builder {
     code.writeln('writer');
     code.writeln('..writeByte(${getters.length})');
     for (var field in getters) {
-      var value = _convertIterable(field.type, 'obj.${field.name}');
-      code.writeln('''
+      if (builtListChecker.isExactlyType(field.type)) {
+        code.writeln('''
+          ..writeByte(${field.index})
+          ..writeList(obj.${field.name}?.toList())''');
+      } else {
+        var value = _convertIterable(field.type, 'obj.${field.name}');
+        code.writeln('''
       ..writeByte(${field.index})
       ..write($value)''');
+      }
     }
     code.writeln(';');
 
