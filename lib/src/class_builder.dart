@@ -32,7 +32,7 @@ class ClassBuilder extends Builder {
     code.writeln('''
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
-      for (var i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+      for (var i = 0; i < numOfFields; i++) reader.readByte(): numOfFields reader.read(),
     };
     return (${cls.name}Builder()
     ''');
@@ -56,6 +56,9 @@ class ClassBuilder extends Builder {
   String _cast(DartType type, String variable) {
     if (hiveListChecker.isExactlyType(type)) {
       return '($variable as HiveList)?.castHiveList()';
+    } else if (builtListChecker.isAssignableFromType(type) &&
+        !isUint8List(type)) {
+      return '${_castBuiltList(type, variable)}';
     } else if (iterableChecker.isAssignableFromType(type) &&
         !isUint8List(type)) {
       return '${_castIterable(type, variable)}';
@@ -86,10 +89,24 @@ class ClassBuilder extends Builder {
       var cast = '';
       if (builtListChecker.isExactlyType(type)) {
         cast = 'ListBuilder<$arg>($variable as List)';
+      } else if (builtMapChecker.isExactlyType(type)) {
+        cast = 'MapBuilder<$arg>($variable as Map)';
       } else if (builtSetChecker.isExactlyType(type)) {
         cast = 'SetBuilder<$arg>($variable as Set)';
       }
       // return '?.map((dynamic e)=> ${_cast(arg, 'e')})$cast';
+      return cast;
+    } else {
+      return '($variable as List)?.cast<${arg.getDisplayString()}>()';
+    }
+  }
+
+  String _castBuiltList(DartType type, String variable) {
+    var paramType = type as ParameterizedType;
+    var arg = paramType.typeArguments[0];
+    print('$arg ${isMapOrIterable(arg)} and ${isUint8List(type)}');
+    if (isMapOrIterable(type) && !isUint8List(arg)) {
+      var cast = 'ListBuilder<$arg>($variable as List)';
       return cast;
     } else {
       return '($variable as List)?.cast<${arg.getDisplayString()}>()';
